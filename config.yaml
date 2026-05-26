@@ -1,0 +1,214 @@
+# ============================================================
+# BUSCADOR DE VUELOS BARATOS DESDE MADRID - EUROPA
+# ============================================================
+# Busca el fin de semana 5-7 junio 2026 en 15 destinos europeos.
+#
+# PASAJEROS: 1 persona por busqueda → precio POR PERSONA.
+# Para reservar 2 tickets: compralos por separado y elegis
+# el equipaje que quieras en cada uno (carry-on, mochila, etc.)
+#
+# UMBRALES: precio por PERSONA (ida + vuelta)
+#   - Destinos cercanos : 100 EUR/persona
+#   - Europa Central    : 110 EUR/persona
+#   - Destinos lejanos  : 120 EUR/persona
+#
+# IMPORTANTE SOBRE HORARIOS:
+# El sistema no filtra por hora de salida/llegada.
+# Cuando recibas una alerta, revisa en Google Flights si hay
+# opciones para ese precio que salgan despues de las 15h el
+# viernes y lleguen a MAD despues de las 17h el domingo.
+# ============================================================
+
+rutas:
+
+  # ---- PORTUGAL ----
+
+  - nombre: "MAD → LIS (Lisboa)"
+    origen: "MAD"
+    destino: "LIS"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → OPO (Oporto)"
+    origen: "MAD"
+    destino: "OPO"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  # ---- ITALIA ----
+
+  - nombre: "MAD → FCO (Roma Fiumicino)"
+    origen: "MAD"
+    destino: "FCO"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → BGY (Milan Bergamo - Ryanair)"
+    origen: "MAD"
+    destino: "BGY"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → MXP (Milan Malpensa)"
+    origen: "MAD"
+    destino: "MXP"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → VCE (Venecia)"
+    origen: "MAD"
+    destino: "VCE"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  # ---- FRANCIA ----
+
+  - nombre: "MAD → ORY (Paris Orly)"
+    origen: "MAD"
+    destino: "ORY"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → CDG (Paris Charles de Gaulle)"
+    origen: "MAD"
+    destino: "CDG"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  # ---- EUROPA CENTRAL ----
+
+  - nombre: "MAD → PRG (Praga)"
+    origen: "MAD"
+    destino: "PRG"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 110
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → BUD (Budapest)"
+    origen: "MAD"
+    destino: "BUD"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 110
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → KRK (Cracovia)"
+    origen: "MAD"
+    destino: "KRK"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 110
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → VIE (Viena)"
+    origen: "MAD"
+    destino: "VIE"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 110
+    moneda: "EUR"
+    solo_carry_on: true
+
+  # ---- NORTE ----
+
+  - nombre: "MAD → AMS (Amsterdam)"
+    origen: "MAD"
+    destino: "AMS"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 110
+    moneda: "EUR"
+    solo_carry_on: true
+
+  - nombre: "MAD → BRU (Bruselas)"
+    origen: "MAD"
+    destino: "BRU"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 100
+    moneda: "EUR"
+    solo_carry_on: true
+
+  # ---- SUR/ESTE ----
+
+  - nombre: "MAD → ATH (Atenas)"
+    origen: "MAD"
+    destino: "ATH"
+    pasajeros: 1
+    fechas_ida:
+      - "2026-06-05"
+    fechas_vuelta:
+      - "2026-06-07"
+    umbral_precio: 120
+    moneda: "EUR"
+    solo_carry_on: true
