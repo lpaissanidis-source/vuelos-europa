@@ -9,6 +9,7 @@
 #   3. Guarda cada precio encontrado en la base de datos
 #   4. Manda alerta por Telegram si el precio baja del umbral
 #      o si es un nuevo minimo historico
+#   5. Manda un resumen al final de cada corrida
 # ============================================================
 
 import yaml
@@ -45,6 +46,8 @@ def procesar_ruta(config_ruta):
 
     Regla anti-spam: manda como maximo 1 alerta por ruta
     (la combinacion de fechas con el precio mas bajo encontrado).
+
+    Devuelve un dict con el resumen de la ruta para el mensaje final.
     """
 
     nombre    = config_ruta["nombre"]
@@ -67,7 +70,7 @@ def procesar_ruta(config_ruta):
 
     if not resultados:
         print(f"  Sin resultados para esta ruta.")
-        return
+        return {"nombre": nombre, "umbral": umbral, "mejor_precio": None, "alerta_enviada": False}
 
     print(f"\n  Resultados obtenidos: {len(resultados)} combinaciones con precio")
 
@@ -118,7 +121,7 @@ def procesar_ruta(config_ruta):
     # PASO 3: Decidir si mandar alerta (maximo 1 por ruta)
     # --------------------------------------------------------
     if mejor_vuelo is None:
-        return
+        return {"nombre": nombre, "umbral": umbral, "mejor_precio": None, "alerta_enviada": False}
 
     debe_alertar = (mejor_precio < umbral) or mejor_es_nuevo_min
 
@@ -153,6 +156,8 @@ def procesar_ruta(config_ruta):
         print(f"\n  Mejor precio encontrado: {mejor_precio:.0f} EUR")
         print(f"  Umbral: {umbral} EUR — No se manda alerta (precio sobre el umbral)")
 
+    return {"nombre": nombre, "umbral": umbral, "mejor_precio": mejor_precio, "alerta_enviada": debe_alertar}
+
 
 # ============================================================
 # PROGRAMA PRINCIPAL
@@ -178,14 +183,43 @@ if __name__ == "__main__":
 
     print(f"Rutas a buscar: {len(rutas)}")
 
+    resumen_rutas = []
     for ruta in rutas:
         try:
-            procesar_ruta(ruta)
+            resultado = procesar_ruta(ruta)
+            if resultado:
+                resumen_rutas.append(resultado)
         except Exception as e:
             print(f"\n  ERROR procesando {ruta.get('nombre', '?')}: {e}")
             print(f"  Continuando con la siguiente ruta...")
+            resumen_rutas.append({"nombre": ruta.get("nombre", "?"), "umbral": ruta.get("umbral_precio", 0), "mejor_precio": None, "alerta_enviada": False})
 
     hora_fin = datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     print(f"\n{'='*55}")
     print(f"Busqueda completada: {hora_fin}")
     print(f"{'='*55}\n")
+
+    # --------------------------------------------------------
+    # Mensaje de resumen a Telegram (siempre, aunque no haya ofertas)
+    # --------------------------------------------------------
+    _con_precio = [r for r in resumen_rutas if r["mejor_precio"] is not None]
+    _alertas    = sum(1 for r in resumen_rutas if r["alerta_enviada"])
+    _hora_corta = datetime.datetime.now().strftime("%d/%m %H:%M")
+
+    if _con_precio:
+        _mejor = min(_con_precio, key=lambda r: r["mejor_precio"])
+        _simbolo = "✅" if _mejor["mejor_precio"] < _mejor["umbral"] else "📌"
+        _linea_mejor = f"{_simbolo} Mejor: {_mejor['nombre']} → {_mejor['mejor_precio']:.0f}€ (umbral {_mejor['umbral']}€)"
+    else:
+        _linea_mejor = "⚠️ Sin precios encontrados (posible error de scraping)"
+
+    if _alertas > 0:
+        _estado = f"🔔 {_alertas} alerta(s) enviada(s)"
+    else:
+        _estado = "Sin ofertas por ahora"
+
+    enviar_mensaje(
+        f"📊 <b>{NOMBRE_BUSCADOR}</b> | {_hora_corta}\n"
+        f"{len(resumen_rutas)}/{len(rutas)} rutas OK | {_estado}\n"
+        f"{_linea_mejor}"
+    )
