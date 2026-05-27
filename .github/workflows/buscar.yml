@@ -23,7 +23,9 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Instalar navegador Playwright
-        run: playwright install chromium --with-deps
+        run: |
+          pip install playwright
+          python -m playwright install chromium --with-deps
 
       - name: Ejecutar buscador
         env:
