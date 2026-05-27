@@ -5,8 +5,6 @@
 import re
 from fast_flights import FlightData, Passengers, get_flights
 
-_debug_impreso = False  # Imprime los atributos del vuelo solo la primera vez
-
 
 def parsear_precio(texto_precio):
     if not texto_precio:
@@ -35,9 +33,39 @@ def parsear_precio(texto_precio):
         return None
 
 
+def _buscar_horario_vuelta(destino, origen, fecha_vuelta, pasajeros):
+    """
+    Hace una busqueda de solo-ida para el tramo de vuelta y devuelve
+    (salida_vuelta, llegada_vuelta). Necesario porque fast-flights no
+    expone los horarios del tramo de vuelta en la busqueda redonda.
+    """
+    try:
+        res = get_flights(
+            flight_data=[
+                FlightData(date=fecha_vuelta, from_airport=destino, to_airport=origen),
+            ],
+            trip="one-way",
+            seat="economy",
+            passengers=Passengers(adults=pasajeros),
+            fetch_mode="local",
+        )
+        if not res or not res.flights:
+            return "", ""
+
+        # Toma el vuelo marcado como "mejor" o, si no hay, el primero
+        vuelo = next((f for f in res.flights if getattr(f, "is_best", False)), res.flights[0])
+        salida  = getattr(vuelo, "departure", "")
+        llegada = getattr(vuelo, "arrival", "")
+        dia_sig = getattr(vuelo, "arrival_time_ahead", "")
+        if dia_sig:
+            llegada = f"{llegada} ({dia_sig})"
+        return salida, llegada
+    except Exception:
+        return "", ""
+
+
 def buscar_vuelo_mas_barato(origen, destino, fecha_ida, fecha_vuelta,
                              pasajeros, solo_carry_on=True):
-    global _debug_impreso
 
     print(f"    Buscando {origen}→{destino} | Ida: {fecha_ida} | Vuelta: {fecha_vuelta} ...", end=" ")
 
@@ -57,36 +85,14 @@ def buscar_vuelo_mas_barato(origen, destino, fecha_ida, fecha_vuelta,
             print("Sin resultados.")
             return None
 
-        # --------------------------------------------------------
-        # DEBUG: imprime todos los atributos del resultado y del
-        # primer vuelo, solo en la primera busqueda exitosa.
-        # Aparece en los logs de GitHub Actions.
-        # --------------------------------------------------------
-        if not _debug_impreso:
-            _debug_impreso = True
-            try:
-                _res_attrs = [a for a in dir(resultado) if not a.startswith('_')]
-                print(f"\n    [DEBUG] resultado attrs: {_res_attrs}")
-                _v = resultado.flights[0]
-                _v_attrs = [a for a in dir(_v) if not a.startswith('_')]
-                print(f"    [DEBUG] flight attrs: {_v_attrs}")
-                print(f"    [DEBUG] flight str: {_v}")
-            except Exception as _e:
-                print(f"    [DEBUG] error inspeccionando: {_e}")
-
         vuelo_mas_barato = None
         precio_minimo    = float("inf")
-        idx_mejor        = 0
 
-        for i, vuelo in enumerate(resultado.flights):
-            precio_texto = getattr(vuelo, "price", None)
-            precio = parsear_precio(precio_texto)
-            if precio is None:
-                continue
-            if precio < precio_minimo:
+        for vuelo in resultado.flights:
+            precio = parsear_precio(getattr(vuelo, "price", None))
+            if precio is not None and precio < precio_minimo:
                 precio_minimo    = precio
                 vuelo_mas_barato = vuelo
-                idx_mejor        = i
 
         if vuelo_mas_barato is None:
             print("No se pudo leer el precio.")
@@ -111,31 +117,11 @@ def buscar_vuelo_mas_barato(origen, destino, fecha_ida, fecha_vuelta,
         if dia_sig:
             llegada = f"{llegada} ({dia_sig})"
 
-        # --------------------------------------------------------
-        # Intenta obtener el horario de vuelta de varias fuentes:
-        # 1. Atributos directos del objeto vuelo
-        # 2. Lista returning_flights del resultado (indice correspondiente)
-        # 3. Lista return_flights del resultado
-        # --------------------------------------------------------
-        salida_vuelta  = (getattr(vuelo_mas_barato, "return_departure", "") or
-                          getattr(vuelo_mas_barato, "return_depart", ""))
-        llegada_vuelta = (getattr(vuelo_mas_barato, "return_arrival", "") or
-                          getattr(vuelo_mas_barato, "return_arrive", ""))
-
-        if not salida_vuelta:
-            _ret_list = (getattr(resultado, "returning_flights", None) or
-                         getattr(resultado, "return_flights", None))
-            if _ret_list:
-                _ret = _ret_list[idx_mejor] if idx_mejor < len(_ret_list) else _ret_list[0]
-                salida_vuelta  = getattr(_ret, "departure", "")
-                llegada_vuelta = getattr(_ret, "arrival", "")
-                _dia_sig_v     = getattr(_ret, "arrival_time_ahead", "")
-                if _dia_sig_v:
-                    llegada_vuelta = f"{llegada_vuelta} ({_dia_sig_v})"
-
-        dia_sig_vuelta = getattr(vuelo_mas_barato, "return_arrival_time_ahead", "")
-        if dia_sig_vuelta and llegada_vuelta and "(" not in llegada_vuelta:
-            llegada_vuelta = f"{llegada_vuelta} ({dia_sig_vuelta})"
+        # La libreria fast-flights no expone horarios del tramo de vuelta
+        # en la busqueda redonda, asi que hacemos una segunda busqueda.
+        salida_vuelta, llegada_vuelta = _buscar_horario_vuelta(
+            destino, origen, fecha_vuelta, pasajeros
+        )
 
         print(f"Precio encontrado: {precio_minimo:.2f} EUR")
 
